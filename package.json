@@ -1,5 +1,6 @@
 {
-  "name": "uni-lp-underlying",
+  "name": "lp-underlying-calculator",
+  "homepage": ".",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
