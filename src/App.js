@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 // Material UI
-import { Grid, Box, TextField, Button } from "@material-ui/core";
+import {
+  Grid,
+  Avatar,
+  Paper,
+  Box,
+  TextField,
+  Button,
+  Typography,
+} from "@material-ui/core";
 // Components
 import ConnectWallet from "./components/ConnectWallet";
 // ABIs
@@ -8,6 +16,45 @@ const uniPairABI = require("./abis/UniswapPair.json");
 const tokenABI = require("./abis/ERC20.json");
 // BN
 const BN = require("web3-utils").BN;
+
+const SupportedPool = ({ name, icon }) => (
+  <Grid item xs={3}>
+    <Paper
+      elevation={0}
+      style={{
+        padding: "2rem 3rem",
+        border: "2px solid black",
+      }}
+    >
+      <Grid
+        container
+        direction="row"
+        alignItems="center"
+        style={{
+          minHeight: "100%",
+        }}
+      >
+        <img
+          alt={name}
+          src={`./poolIcons/${icon}`}
+          heigth="40px"
+          width="40px"
+        />
+        <Typography
+          variant="body2"
+          display="inline"
+          gutterBottom
+          style={{
+            fontWeight: "bold",
+            paddingLeft: "1rem"
+          }}
+        >
+          {name}
+        </Typography>
+      </Grid>
+    </Paper>
+  </Grid>
+);
 
 function App() {
   const [web3, setWeb3] = useState();
@@ -19,6 +66,21 @@ function App() {
   const [token1Share, setToken1Share] = useState("");
   const [token0Name, setToken0Name] = useState("");
   const [token1Name, setToken1Name] = useState("");
+
+  const supportedPools = [
+    {
+      name: "Uniswap",
+      icon: "uniswap.png",
+    },
+    {
+      name: "Sushiswap",
+      icon: "sushiswap.ico",
+    },
+    {
+      name: "1inch",
+      icon: "1inch.png",
+    },
+  ];
 
   const calculate = async () => {
     try {
@@ -90,23 +152,29 @@ function App() {
         style={{
           marginBottom: "40px",
           marginTop: "40px",
+          paddingBottom: "30px",
+          borderBottom: "2px solid black",
         }}
       >
-        <Grid item xs={4} />
-        <Grid item xs={5}>
-          <Box
-            fontWeight="fontWeightBold"
-            fontSize="2.5rem"
-            fontFamily="fontFamily"
-            fontStyle=""
+        <Grid item xs={3} />
+        <Grid item xs={6}>
+          <Grid
+            container
+            justify="center"
             style={{
-              // margin: "auto",
-              color: "#673ab7",
-              borderBottom: "4px solid #a3a3a3",
+              paddingRight: "2rem",
             }}
           >
-            💦LP Underlying Calculator 🔢
-          </Box>
+            <Box
+              fontWeight="fontWeightBold"
+              fontSize="2.5rem"
+              fontFamily="fontFamily"
+              fontStyle=""
+              color="#673ab7"
+            >
+              💦LP Underlying Calculator 🔢
+            </Box>
+          </Grid>
         </Grid>
         <Grid item xs={3}>
           {!web3 ? (
@@ -152,58 +220,80 @@ function App() {
           )}
         </Grid>
       </Grid>
-      <Grid item>
-        UNISWAP, SUSHISWAP, 1INCH Pools Supported:
-        <br />
-        <br />
-        <br />
-      </Grid>
-      <Grid item>
-        <TextField
-          id="pair-address"
-          label="Pair Address"
-          variant="outlined"
-          style={{
-            minWidth: "450px",
-          }}
-          autoComplete="off"
-          disabled={inputDisabled}
-          onChange={(e) => setPairAddress(e.target.value)}
-        />
-      </Grid>
-      <Grid item>
-        <TextField
-          id="lp-amount"
-          label="LP Token Amount"
-          variant="outlined"
-          style={{
-            minWidth: "450px",
-          }}
-          autoComplete="off"
-          disabled={inputDisabled}
-          onChange={(e) => setLpAmount(e.target.value)}
-        />
-      </Grid>
-      <Grid item>
-        <Button
-          variant="contained"
-          color="primary"
-          style={{
-            minHeight: "55px",
-            maxWidth: "200px",
-          }}
-          disabled={inputDisabled}
-          onClick={() => calculate()}
-        >
-          Calculate
-        </Button>
-      </Grid>
-      <Grid item>
-        Token A Val: {token0Share} {token0Name}
-      </Grid>
-      <Grid item>
-        Token B Val: {token1Share} {token1Name}
-      </Grid>
+      <Paper
+        elevation={2}
+        style={{
+          margin: "auto",
+          padding: "2rem 10rem",
+          minWidth: "60%",
+        }}
+      >
+        <Grid container justify="space-between">
+          <Grid item>
+            <Grid
+              container
+              direction="row"
+              alignItems="center"
+              style={{
+                minHeight: "100%",
+              }}
+            >
+              <Typography variant="button" display="block" gutterBottom>
+                Supported Pools:
+              </Typography>
+            </Grid>
+          </Grid>
+          {supportedPools.map((pool, index) => (
+            <SupportedPool key={index} name={pool.name} icon={pool.icon} />
+          ))}
+        </Grid>
+        <Grid item>
+          <TextField
+            id="pair-address"
+            label="Pair Address"
+            variant="outlined"
+            style={{
+              minWidth: "450px",
+            }}
+            autoComplete="off"
+            disabled={inputDisabled}
+            onChange={(e) => setPairAddress(e.target.value)}
+          />
+        </Grid>
+        <Grid item>
+          <TextField
+            id="lp-amount"
+            label="LP Token Amount"
+            variant="outlined"
+            style={{
+              minWidth: "450px",
+            }}
+            autoComplete="off"
+            disabled={inputDisabled}
+            onChange={(e) => setLpAmount(e.target.value)}
+          />
+        </Grid>
+        <Grid item>
+          <Button
+            variant="contained"
+            color="primary"
+            style={{
+              minHeight: "55px",
+              maxWidth: "200px",
+            }}
+            disabled={inputDisabled}
+            onClick={() => calculate()}
+          >
+            Calculate
+          </Button>
+        </Grid>
+        <Grid item>
+          Token A Val: {token0Share} {token0Name}
+        </Grid>
+        <Grid item>
+          Token B Val: {token1Share} {token1Name}
+        </Grid>
+      </Paper>
     </Grid>
   );
 }
