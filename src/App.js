@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 // Material UI
 import { Grid, Box, TextField, Button } from "@material-ui/core";
 // Components
@@ -12,6 +12,7 @@ const BN = require("web3-utils").BN;
 function App() {
   const [web3, setWeb3] = useState();
   const [account, setAccount] = useState();
+  const [inputDisabled, setInputDisabled] = useState(true);
   const [pairAddress, setPairAddress] = useState("");
   const [lpAmount, setLpAmount] = useState("");
   const [token0Share, setToken0Share] = useState("");
@@ -24,38 +25,44 @@ function App() {
       const uniPair = new web3.eth.Contract(uniPairABI, pairAddress);
       const token0Address = await uniPair.methods.token0().call();
       const token1Address = await uniPair.methods.token1().call();
+      const lpTotalSupply = await uniPair.methods.totalSupply().call();
 
-      const token0Instance = new web3.eth.Contract(tokenABI, token0Address);
+      if (token0Address === "0x0000000000000000000000000000000000000000") {
+        // in case of 1inch pool having ETH as pool token
+        const reserve0 = await web3.eth.getBalance(pairAddress);
+        const userToken0Share = new BN(reserve0)
+          .mul(new BN(lpAmount).mul(new BN("10").pow(new BN("18"))))
+          .div(new BN(lpTotalSupply));
+        setToken0Share(await toDecimal(token0Address, userToken0Share, true));
+        setToken0Name("ETH");
+      } else {
+        const token0Instance = new web3.eth.Contract(tokenABI, token0Address);
+        const reserve0 = await token0Instance.methods
+          .balanceOf(pairAddress)
+          .call();
+        const userToken0Share = new BN(reserve0)
+          .mul(new BN(lpAmount).mul(new BN("10").pow(new BN("18"))))
+          .div(new BN(lpTotalSupply));
+        setToken0Share(await toDecimal(token0Instance, userToken0Share));
+        setToken0Name(await token0Instance.methods.symbol().call());
+      }
+
       const token1Instance = new web3.eth.Contract(tokenABI, token1Address);
-
-      const reserve0 = await token0Instance.methods
-        .balanceOf(pairAddress)
-        .call();
       const reserve1 = await token1Instance.methods
         .balanceOf(pairAddress)
         .call();
-
-      const lpTotalSupply = await uniPair.methods.totalSupply().call();
-
-      const userToken0Share = new BN(reserve0)
-        .mul(new BN(lpAmount).mul(new BN("10").pow(new BN("18"))))
-        .div(new BN(lpTotalSupply));
       const userToken1Share = new BN(reserve1)
         .mul(new BN(lpAmount).mul(new BN("10").pow(new BN("18"))))
         .div(new BN(lpTotalSupply));
-
-      setToken0Share(await toDecimal(token0Instance, userToken0Share));
       setToken1Share(await toDecimal(token1Instance, userToken1Share));
-
-      setToken0Name(await token0Instance.methods.symbol().call());
       setToken1Name(await token1Instance.methods.symbol().call());
     } catch (error) {
       console.log(error);
     }
   };
 
-  const toDecimal = async (tokenInstance, amount) => {
-    const decimals = await tokenInstance.methods.decimals().call();
+  const toDecimal = async (tokenInstance, amount, isETH) => {
+    var decimals = isETH ? 18 : await tokenInstance.methods.decimals().call();
     const divisor = new BN("10").pow(new BN(decimals));
     const beforeDec = new BN(amount).div(divisor).toString();
     var afterDec = new BN(amount).mod(divisor).toString();
@@ -69,6 +76,12 @@ function App() {
     // remove insignificant trailing zeros
     return ((beforeDec + "." + afterDec) * 1).toString();
   };
+
+  useEffect(() => {
+    if (web3) {
+      setInputDisabled(false);
+    }
+  }, [web3]);
 
   return (
     <Grid container direction="column">
@@ -89,7 +102,7 @@ function App() {
             style={{
               margin: "auto",
               color: "#673ab7",
-              borderBottom: "4px solid #01579b"
+              borderBottom: "4px solid #01579b",
             }}
           >
             LP Underlying Calculator
@@ -140,7 +153,7 @@ function App() {
         </Grid>
       </Grid>
       <Grid item>
-        UNISWAP:
+        UNISWAP, SUSHISWAP, 1INCH Pools Supported:
         <br />
         <br />
         <br />
@@ -154,6 +167,7 @@ function App() {
             minWidth: "450px",
           }}
           autoComplete="off"
+          disabled={inputDisabled}
           onChange={(e) => setPairAddress(e.target.value)}
         />
       </Grid>
@@ -166,6 +180,7 @@ function App() {
             minWidth: "450px",
           }}
           autoComplete="off"
+          disabled={inputDisabled}
           onChange={(e) => setLpAmount(e.target.value)}
         />
       </Grid>
@@ -177,6 +192,7 @@ function App() {
             minHeight: "55px",
             maxWidth: "200px",
           }}
+          disabled={inputDisabled}
           onClick={() => calculate()}
         >
           Calculate
