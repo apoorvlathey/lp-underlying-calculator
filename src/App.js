@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 // Material UI
 import {
   Grid,
-  Avatar,
   Paper,
   Box,
   TextField,
@@ -261,8 +260,11 @@ function App() {
         <Grid
           container
           direction="column"
-          justify="space-evenly"
+          spacing={3}
           alignItems="center"
+          style={{
+            marginTop: "3rem",
+          }}
         >
           <Grid item>
             <TextField
@@ -304,12 +306,22 @@ function App() {
               Calculate
             </Button>
           </Grid>
-          <Grid item>
-            Token A Val: {token0Share} {token0Name}
-          </Grid>
-          <Grid item>
-            Token B Val: {token1Share} {token1Name}
-          </Grid>
+          {token0Name && token1Name && (
+              <Grid item>
+                <Box
+                  fontWeight="fontWeightBold"
+                  fontFamily="fontFamily"
+                >
+                  Token A Val: {token0Share} {token0Name}
+                </Box>
+                <Box
+                  fontWeight="fontWeightBold"
+                  fontFamily="fontFamily"
+                >
+                  Token B Val: {token1Share} {token1Name}
+                </Box>
+              </Grid>
+          )}
         </Grid>
       </Paper>
     </Grid>
