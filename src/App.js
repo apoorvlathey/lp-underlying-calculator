@@ -93,22 +93,22 @@ function App() {
         }}
       >
         <Grid item xs={4} />
-        <Grid item xs={4}>
+        <Grid item xs={5}>
           <Box
             fontWeight="fontWeightBold"
-            fontSize="h4.fontSize"
+            fontSize="2.5rem"
             fontFamily="fontFamily"
             fontStyle=""
             style={{
-              margin: "auto",
+              // margin: "auto",
               color: "#673ab7",
-              borderBottom: "4px solid #01579b",
+              borderBottom: "4px solid #a3a3a3",
             }}
           >
-            LP Underlying Calculator
+            💦LP Underlying Calculator 🔢
           </Box>
         </Grid>
-        <Grid item xs={4}>
+        <Grid item xs={3}>
           {!web3 ? (
             <Grid
               container
