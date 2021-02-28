@@ -17,6 +17,19 @@ const tokenABI = require("./abis/ERC20.json");
 // BN
 const BN = require("web3-utils").BN;
 
+const truncateWithDots = (
+  str,
+  firstCharCount = 6,
+  endCharCount = 4,
+  dotCount = 4
+) => {
+  var convertedStr = "";
+  convertedStr += str.substring(0, firstCharCount);
+  convertedStr += ".".repeat(dotCount);
+  convertedStr += str.substring(str.length - endCharCount, str.length);
+  return convertedStr;
+};
+
 const SupportedPool = ({ name, icon }) => (
   <Grid item xs={3}>
     <Paper
@@ -46,7 +59,7 @@ const SupportedPool = ({ name, icon }) => (
           gutterBottom
           style={{
             fontWeight: "bold",
-            paddingLeft: "1rem"
+            paddingLeft: "1rem",
           }}
         >
           {name}
@@ -58,7 +71,7 @@ const SupportedPool = ({ name, icon }) => (
 
 function App() {
   const [web3, setWeb3] = useState();
-  const [account, setAccount] = useState();
+  const [account, setAccount] = useState("");
   const [inputDisabled, setInputDisabled] = useState(true);
   const [pairAddress, setPairAddress] = useState("");
   const [lpAmount, setLpAmount] = useState("");
@@ -177,19 +190,17 @@ function App() {
           </Grid>
         </Grid>
         <Grid item xs={3}>
-          {!web3 ? (
-            <Grid
-              container
-              justify="flex-end"
-              style={{
-                paddingRight: "2rem",
-              }}
-            >
+          <Grid
+            container
+            justify="flex-end"
+            style={{
+              paddingRight: "2rem",
+            }}
+          >
+            {!web3 ? (
               <ConnectWallet setWeb3={setWeb3} setAccount={setAccount} />
-            </Grid>
-          ) : (
-            <>
-              <Grid container justify="center">
+            ) : (
+              <Grid container direction="column" alignItems="flex-end">
                 <Grid item>
                   <Box
                     fontWeight="fontWeightBold"
@@ -198,7 +209,7 @@ function App() {
                     fontStyle=""
                     style={{
                       color: "green",
-                      marginRight: "1rem",
+                      marginRight: "0.5rem",
                     }}
                   >
                     • Connected
@@ -209,15 +220,15 @@ function App() {
                     fontWeight="fontWeightBold"
                     fontFamily="fontFamily"
                     style={{
-                      color: "green",
+                      color: "#04ad04",
                     }}
                   >
-                    {account}
+                    {`(${truncateWithDots(account)})`}
                   </Box>
                 </Grid>
               </Grid>
-            </>
-          )}
+            )}
+          </Grid>
         </Grid>
       </Grid>
       <Paper
