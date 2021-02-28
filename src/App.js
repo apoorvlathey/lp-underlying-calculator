@@ -170,65 +170,65 @@ function App() {
         }}
       >
         <Grid item xs={3} />
-        <Grid item xs={6}>
-          <Grid
-            container
-            justify="center"
-            style={{
-              paddingRight: "2rem",
-            }}
+        <Grid
+          item
+          xs={6}
+          container
+          justify="center"
+          style={{
+            paddingRight: "2rem",
+          }}
+        >
+          <Box
+            fontWeight="fontWeightBold"
+            fontSize="2.5rem"
+            fontFamily="fontFamily"
+            fontStyle=""
+            color="#673ab7"
           >
-            <Box
-              fontWeight="fontWeightBold"
-              fontSize="2.5rem"
-              fontFamily="fontFamily"
-              fontStyle=""
-              color="#673ab7"
-            >
-              💦LP Underlying Calculator 🔢
-            </Box>
-          </Grid>
+            💦LP Underlying Calculator 🔢
+          </Box>
         </Grid>
-        <Grid item xs={3}>
-          <Grid
-            container
-            justify="flex-end"
-            style={{
-              paddingRight: "2rem",
-            }}
-          >
-            {!web3 ? (
-              <ConnectWallet setWeb3={setWeb3} setAccount={setAccount} />
-            ) : (
-              <Grid container direction="column" alignItems="flex-end">
-                <Grid item>
-                  <Box
-                    fontWeight="fontWeightBold"
-                    fontSize="1.2rem"
-                    fontFamily="fontFamily"
-                    fontStyle=""
-                    style={{
-                      color: "green",
-                      marginRight: "0.5rem",
-                    }}
-                  >
-                    • Connected
-                  </Box>
-                </Grid>
-                <Grid item>
-                  <Box
-                    fontWeight="fontWeightBold"
-                    fontFamily="fontFamily"
-                    style={{
-                      color: "#04ad04",
-                    }}
-                  >
-                    {`(${truncateWithDots(account)})`}
-                  </Box>
-                </Grid>
+        <Grid
+          item
+          xs={3}
+          container
+          justify="flex-end"
+          style={{
+            paddingRight: "2rem",
+          }}
+        >
+          {!web3 ? (
+            <ConnectWallet setWeb3={setWeb3} setAccount={setAccount} />
+          ) : (
+            <Grid container direction="column" alignItems="flex-end">
+              <Grid item>
+                <Box
+                  fontWeight="fontWeightBold"
+                  fontSize="1.2rem"
+                  fontFamily="fontFamily"
+                  fontStyle=""
+                  style={{
+                    color: "green",
+                    marginRight: "0.5rem",
+                  }}
+                >
+                  • Connected
+                </Box>
               </Grid>
-            )}
-          </Grid>
+              <Grid item>
+                <Box
+                  fontWeight="fontWeightBold"
+                  fontFamily="fontFamily"
+                  style={{
+                    color: "#04ad04",
+                  }}
+                >
+                  {`(${truncateWithDots(account)})`}
+                </Box>
+              </Grid>
+            </Grid>
+          )}
         </Grid>
       </Grid>
       <Paper
@@ -258,51 +258,58 @@ function App() {
             <SupportedPool key={index} name={pool.name} icon={pool.icon} />
           ))}
         </Grid>
-        <Grid item>
-          <TextField
-            id="pair-address"
-            label="Pair Address"
-            variant="outlined"
-            style={{
-              minWidth: "450px",
-            }}
-            autoComplete="off"
-            disabled={inputDisabled}
-            onChange={(e) => setPairAddress(e.target.value)}
-          />
-        </Grid>
-        <Grid item>
-          <TextField
-            id="lp-amount"
-            label="LP Token Amount"
-            variant="outlined"
-            style={{
-              minWidth: "450px",
-            }}
-            autoComplete="off"
-            disabled={inputDisabled}
-            onChange={(e) => setLpAmount(e.target.value)}
-          />
-        </Grid>
-        <Grid item>
-          <Button
-            variant="contained"
-            color="primary"
-            style={{
-              minHeight: "55px",
-              maxWidth: "200px",
-            }}
-            disabled={inputDisabled}
-            onClick={() => calculate()}
-          >
-            Calculate
-          </Button>
-        </Grid>
-        <Grid item>
-          Token A Val: {token0Share} {token0Name}
-        </Grid>
-        <Grid item>
-          Token B Val: {token1Share} {token1Name}
+        <Grid
+          container
+          direction="column"
+          justify="space-evenly"
+          alignItems="center"
+        >
+          <Grid item>
+            <TextField
+              id="pair-address"
+              label="Pair Address"
+              variant="outlined"
+              style={{
+                minWidth: "450px",
+              }}
+              autoComplete="off"
+              disabled={inputDisabled}
+              onChange={(e) => setPairAddress(e.target.value)}
+            />
+          </Grid>
+          <Grid item>
+            <TextField
+              id="lp-amount"
+              label="LP Token Amount"
+              variant="outlined"
+              style={{
+                minWidth: "450px",
+              }}
+              autoComplete="off"
+              disabled={inputDisabled}
+              onChange={(e) => setLpAmount(e.target.value)}
+            />
+          </Grid>
+          <Grid item>
+            <Button
+              variant="contained"
+              color="primary"
+              style={{
+                minHeight: "55px",
+                maxWidth: "200px",
+              }}
+              disabled={inputDisabled}
+              onClick={() => calculate()}
+            >
+              Calculate
+            </Button>
+          </Grid>
+          <Grid item>
+            Token A Val: {token0Share} {token0Name}
+          </Grid>
+          <Grid item>
+            Token B Val: {token1Share} {token1Name}
+          </Grid>
         </Grid>
       </Paper>
     </Grid>
