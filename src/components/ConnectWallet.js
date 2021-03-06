@@ -1,10 +1,17 @@
 import Web3Modal from "web3modal";
 import Web3 from "web3";
 import Portis from "@portis/web3";
+import WalletConnectProvider from "@walletconnect/web3-provider";
 import { Button } from "@material-ui/core";
 require("dotenv").config();
 
 const providerOptions = {
+  walletconnect: {
+		package: WalletConnectProvider, // required
+		options: {
+			infuraId: process.env.REACT_APP_INFURA_KEY // required
+		}
+	},
   portis: {
     package: Portis, // required
     options: {
