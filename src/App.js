@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Grid,
+  LinearProgress,
   Paper,
   Box,
   TextField,
@@ -72,6 +73,7 @@ function App() {
   const [web3, setWeb3] = useState();
   const [account, setAccount] = useState("");
   const [inputDisabled, setInputDisabled] = useState(true);
+  const [loading, setLoading] = useState(false)
   const [pairAddress, setPairAddress] = useState("");
   const [lpAmount, setLpAmount] = useState("");
   const [token0Share, setToken0Share] = useState("");
@@ -101,6 +103,7 @@ function App() {
   ];
 
   const calculate = async () => {
+    setLoading(true)
     try {
       const uniPair = new web3.eth.Contract(uniPairABI, pairAddress);
       const token0Address = await uniPair.methods.token0().call();
@@ -152,6 +155,7 @@ function App() {
       tokenAddressesForPrice.array.push(token1Address.toLowerCase());
 
       setPrices(await getPrice(tokenAddressesForPrice));
+      setLoading(false)
     } catch (error) {
       console.log(error);
     }
@@ -273,6 +277,13 @@ function App() {
           )}
         </Grid>
       </Grid>
+      <LinearProgress 
+        style={{
+          marginLeft: "9.5%",
+          maxWidth: "81%",
+          ...(loading ? {display: "block"} : {display: "none"})
+        }}
+      />
       <Paper
         elevation={2}
         style={{
