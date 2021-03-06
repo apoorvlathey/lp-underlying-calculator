@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-// Material UI
 import {
   Grid,
   Paper,
@@ -8,6 +7,7 @@ import {
   Button,
   Typography,
 } from "@material-ui/core";
+import axios from "axios";
 // Components
 import ConnectWallet from "./components/ConnectWallet";
 // ABIs
@@ -78,6 +78,12 @@ function App() {
   const [token1Share, setToken1Share] = useState("");
   const [token0Name, setToken0Name] = useState("");
   const [token1Name, setToken1Name] = useState("");
+  const [prices, setPrices] = useState([0, 0])
+  const [token0UsdVal, setToken0UsdVal] = useState("")
+  const [token1UsdVal, setToken1UsdVal] = useState("")
+
+  const ETHAddress = "0x0000000000000000000000000000000000000000";
+  const WETHAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
   const supportedPools = [
     {
@@ -101,7 +107,12 @@ function App() {
       const token1Address = await uniPair.methods.token1().call();
       const lpTotalSupply = await uniPair.methods.totalSupply().call();
 
-      if (token0Address === "0x0000000000000000000000000000000000000000") {
+      var tokenAddressesForPrice = {
+        string: "",
+        array: [],
+      };
+
+      if (token0Address === ETHAddress) {
         // in case of 1inch pool having ETH as pool token
         const reserve0 = await web3.eth.getBalance(pairAddress);
         const userToken0Share = new BN(reserve0)
@@ -109,6 +120,9 @@ function App() {
           .div(new BN(lpTotalSupply));
         setToken0Share(await toDecimal(token0Address, userToken0Share, true));
         setToken0Name("ETH");
+
+        tokenAddressesForPrice.string = WETHAddress;
+        tokenAddressesForPrice.array.push(WETHAddress.toLowerCase());
       } else {
         const token0Instance = new web3.eth.Contract(tokenABI, token0Address);
         const reserve0 = await token0Instance.methods
@@ -119,6 +133,9 @@ function App() {
           .div(new BN(lpTotalSupply));
         setToken0Share(await toDecimal(token0Instance, userToken0Share));
         setToken0Name(await token0Instance.methods.symbol().call());
+
+        tokenAddressesForPrice.string = token0Address;
+        tokenAddressesForPrice.array.push(token0Address.toLowerCase());
       }
 
       const token1Instance = new web3.eth.Contract(tokenABI, token1Address);
@@ -130,13 +147,18 @@ function App() {
         .div(new BN(lpTotalSupply));
       setToken1Share(await toDecimal(token1Instance, userToken1Share));
       setToken1Name(await token1Instance.methods.symbol().call());
+
+      tokenAddressesForPrice.string += "," + token1Address;
+      tokenAddressesForPrice.array.push(token1Address.toLowerCase());
+
+      setPrices(await getPrice(tokenAddressesForPrice));
     } catch (error) {
       console.log(error);
     }
   };
 
   const toDecimal = async (tokenInstance, amount, isETH) => {
-    var decimals = isETH ? 18 : await tokenInstance.methods.decimals().call();
+    var decimals = isETH ? 18 : parseInt(await tokenInstance.methods.decimals().call());
     const divisor = new BN("10").pow(new BN(decimals));
     const beforeDec = new BN(amount).div(divisor).toString();
     var afterDec = new BN(amount).mod(divisor).toString();
@@ -149,6 +171,20 @@ function App() {
 
     // remove insignificant trailing zeros
     return ((beforeDec + "." + afterDec) * 1).toString();
+  };
+
+  const getPrice = async ({ string, array }) => {
+    const response = await axios.get(
+      "https://api.coingecko.com/api/v3/simple/token_price/ethereum",
+      {
+        params: {
+          contract_addresses: string,
+          vs_currencies: "usd",
+        },
+      }
+    );
+
+    return [response.data[array[0]].usd, response.data[array[1]].usd];
   };
 
   useEffect(() => {
@@ -266,6 +302,17 @@ function App() {
             marginTop: "3rem",
           }}
         >
+          {inputDisabled && (
+            <Grid item>
+              <Box
+                fontWeight="fontWeightBold"
+                fontFamily="fontFamily"
+                color="#ff6961"
+              >
+                Connect Wallet to Continue ⬈
+              </Box>
+            </Grid>
+          )}
           <Grid item>
             <TextField
               id="pair-address"
@@ -307,20 +354,17 @@ function App() {
             </Button>
           </Grid>
           {token0Name && token1Name && (
-              <Grid item>
-                <Box
-                  fontWeight="fontWeightBold"
-                  fontFamily="fontFamily"
-                >
-                  Token A Val: {token0Share} {token0Name}
-                </Box>
-                <Box
-                  fontWeight="fontWeightBold"
-                  fontFamily="fontFamily"
-                >
-                  Token B Val: {token1Share} {token1Name}
-                </Box>
-              </Grid>
+            <Grid item>
+              <Box fontWeight="fontWeightBold" fontFamily="fontFamily">
+                {token0Name} Amount: {token0Share} (${prices[0]*token0Share})
+              </Box>
+              <Box fontWeight="fontWeightBold" fontFamily="fontFamily">
+                {token1Name} Amount: {token1Share} (${prices[1]*token1Share})
+              </Box>
+              <Box fontWeight="fontWeightBold" fontFamily="fontFamily">
+                Total Worth: ${prices[0]*token0Share + prices[1]*token1Share}
+              </Box>
+            </Grid>
           )}
         </Grid>
       </Paper>
