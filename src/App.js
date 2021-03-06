@@ -79,8 +79,8 @@ function App() {
   const [token0Name, setToken0Name] = useState("");
   const [token1Name, setToken1Name] = useState("");
   const [prices, setPrices] = useState([0, 0])
-  const [token0UsdVal, setToken0UsdVal] = useState("")
-  const [token1UsdVal, setToken1UsdVal] = useState("")
+  const [token0UsdVal, setToken0UsdVal] = useState(0)
+  const [token1UsdVal, setToken1UsdVal] = useState(0)
 
   const ETHAddress = "0x0000000000000000000000000000000000000000";
   const WETHAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
@@ -192,6 +192,13 @@ function App() {
       setInputDisabled(false);
     }
   }, [web3]);
+
+  useEffect(() => {
+    if(prices[0] > 0 && prices[1] > 0 && token0Share && token1Share) {
+      setToken0UsdVal(parseFloat((prices[0] * token0Share).toFixed(2)))
+      setToken1UsdVal(parseFloat((prices[1] * token1Share).toFixed(2)))
+    }
+  }, [prices, token0Share, token1Share])
 
   return (
     <Grid container direction="column">
@@ -356,13 +363,13 @@ function App() {
           {token0Name && token1Name && (
             <Grid item>
               <Box fontWeight="fontWeightBold" fontFamily="fontFamily">
-                {token0Name} Amount: {token0Share} (${prices[0]*token0Share})
+                {token0Name} Amount: {token0Share} (${token0UsdVal})
               </Box>
               <Box fontWeight="fontWeightBold" fontFamily="fontFamily">
-                {token1Name} Amount: {token1Share} (${prices[1]*token1Share})
+                {token1Name} Amount: {token1Share} (${token1UsdVal})
               </Box>
               <Box fontWeight="fontWeightBold" fontFamily="fontFamily">
-                Total Worth: ${prices[0]*token0Share + prices[1]*token1Share}
+                Total Worth: ${token0UsdVal + token1UsdVal}
               </Box>
             </Grid>
           )}
