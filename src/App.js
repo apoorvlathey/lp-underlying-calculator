@@ -182,6 +182,10 @@ function App() {
     return ((beforeDec + "." + afterDec) * 1).toString();
   };
 
+  const numberWithCommas = (x) => {
+    return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",");
+  };
+
   const getPrice = async ({ string, array }) => {
     const response = await axios.get(
       "https://api.coingecko.com/api/v3/simple/token_price/ethereum",
@@ -408,7 +412,7 @@ function App() {
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
-                      setLpAmount(userLPBalance * 0.25);
+                      setLpAmount(lpAmount * 0.25);
                     }}
                   >
                     25%
@@ -418,7 +422,7 @@ function App() {
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
-                      setLpAmount(userLPBalance * 0.50);
+                      setLpAmount(lpAmount * 0.5);
                     }}
                   >
                     50%
@@ -428,7 +432,7 @@ function App() {
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
-                      setLpAmount(userLPBalance * 0.75);
+                      setLpAmount(lpAmount * 0.75);
                     }}
                   >
                     75%
@@ -438,7 +442,7 @@ function App() {
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
-                      setLpAmount(userLPBalance);
+                      setLpAmount(lpAmount);
                     }}
                   >
                     100%
@@ -485,7 +489,9 @@ function App() {
                   marginBottom={2}
                 >
                   LP Token Value: $
-                  {parseFloat(token0UsdVal + token1UsdVal).toFixed(2)}
+                  {numberWithCommas(
+                    parseFloat(token0UsdVal + token1UsdVal).toFixed(2)
+                  )}
                 </Box>
               </Grid>
               <Grid
@@ -518,7 +524,7 @@ function App() {
                     fontWeight="fontWeightBold"
                     fontFamily="fontFamily"
                   >
-                    (${token0UsdVal})
+                    (${numberWithCommas(token0UsdVal)})
                   </Box>
                 </Grid>
               </Grid>
@@ -552,7 +558,7 @@ function App() {
                     fontWeight="fontWeightBold"
                     fontFamily="fontFamily"
                   >
-                    (${token1UsdVal})
+                    (${numberWithCommas(token1UsdVal)})
                   </Box>
                 </Grid>
               </Grid>
