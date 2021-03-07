@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import {
+  Tabs,
+  Tab,
   Grid,
   LinearProgress,
   Paper,
@@ -75,6 +77,11 @@ function App() {
   const [account, setAccount] = useState("");
   const [inputDisabled, setInputDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [dollarValue, setDollarValue] = useState("");
+  const [lpAmountCalculated, setLpAmountCalculated] = useState("");
+
   const [pairAddress, setPairAddress] = useState("");
   const [userLPBalance, setUserLPBalance] = useState("0");
   const [lpAmount, setLpAmount] = useState("");
@@ -164,6 +171,63 @@ function App() {
     }
   };
 
+  const calculateDollar = async () => {
+    setLoading(true);
+    try {
+      const uniPair = new web3.eth.Contract(uniPairABI, pairAddress);
+      const token0Address = await uniPair.methods.token0().call();
+      const token1Address = await uniPair.methods.token1().call();
+      const lpTotalSupply = await uniPair.methods.totalSupply().call();
+
+      var tokenAddressesForPrice = {
+        string: "",
+        array: [],
+      };
+
+      const tempLPBNAmt = new BN(toWei("1"));
+      if (token0Address === ETHAddress) {
+        // in case of 1inch pool having ETH as pool token
+        const reserve0 = await web3.eth.getBalance(pairAddress);
+        const userToken0Share = new BN(reserve0)
+          .mul(tempLPBNAmt)
+          .div(new BN(lpTotalSupply));
+        setToken0Share(await toDecimal(token0Address, userToken0Share, true));
+
+        tokenAddressesForPrice.string = WETHAddress;
+        tokenAddressesForPrice.array.push(WETHAddress.toLowerCase());
+      } else {
+        const token0Instance = new web3.eth.Contract(tokenABI, token0Address);
+        const reserve0 = await token0Instance.methods
+          .balanceOf(pairAddress)
+          .call();
+        const userToken0Share = new BN(reserve0)
+          .mul(tempLPBNAmt)
+          .div(new BN(lpTotalSupply));
+        setToken0Share(await toDecimal(token0Instance, userToken0Share));
+
+        tokenAddressesForPrice.string = token0Address;
+        tokenAddressesForPrice.array.push(token0Address.toLowerCase());
+      }
+
+      const token1Instance = new web3.eth.Contract(tokenABI, token1Address);
+      const reserve1 = await token1Instance.methods
+        .balanceOf(pairAddress)
+        .call();
+      const userToken1Share = new BN(reserve1)
+        .mul(tempLPBNAmt)
+        .div(new BN(lpTotalSupply));
+      setToken1Share(await toDecimal(token1Instance, userToken1Share));
+
+      tokenAddressesForPrice.string += "," + token1Address;
+      tokenAddressesForPrice.array.push(token1Address.toLowerCase());
+
+      setPrices(await getPrice(tokenAddressesForPrice));
+      setLoading(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const toDecimal = async (tokenInstance, amount, isETH) => {
     var decimals = isETH
       ? 18
@@ -214,6 +278,13 @@ function App() {
   }, [prices, token0Share, token1Share]);
 
   useEffect(() => {
+    if (selectedTab == 1 && token0UsdVal && token1UsdVal) {
+      const lpPrice = token0UsdVal + token1UsdVal;
+      setLpAmountCalculated(dollarValue / lpPrice);
+    }
+  }, [token1UsdVal]);
+
+  useEffect(() => {
     const fetchUserLPBalance = async () => {
       if (pairAddress) {
         setLoading(true);
@@ -237,10 +308,10 @@ function App() {
   }, [pairAddress]);
 
   useEffect(() => {
-    if (lpAmount) {
+    if (lpAmount && selectedTab == 0) {
       setLpAmountInBNWei(new BN(toWei(lpAmount.toString())));
     }
-  }, [lpAmount]);
+  }, [lpAmount, selectedTab]);
 
   return (
     <Grid container direction="column">
@@ -349,138 +420,308 @@ function App() {
             <SupportedPool key={index} name={pool.name} icon={pool.icon} />
           ))}
         </Grid>
-        <Grid
-          container
-          direction="column"
-          spacing={3}
-          alignItems="center"
-          style={{
-            marginTop: "3rem",
-          }}
-        >
-          {inputDisabled && (
-            <Grid item>
-              <Box
-                fontWeight="fontWeightBold"
-                fontFamily="fontFamily"
-                color="#ff6961"
-              >
-                Connect Wallet to Continue ⬈
-              </Box>
-            </Grid>
-          )}
-          <Grid item>
-            <TextField
-              id="pair-address"
-              label="Pair Address"
-              variant="outlined"
-              style={{
-                minWidth: "450px",
-              }}
-              autoComplete="off"
-              disabled={inputDisabled}
-              onChange={(e) => setPairAddress(e.target.value)}
-            />
-          </Grid>
-          <Grid item>
-            {account && (
-              <>
+        <Paper square>
+          <Tabs
+            value={selectedTab}
+            indicatorColor="primary"
+            textColor="primary"
+            style={{
+              marginTop: "2rem",
+            }}
+            onChange={(e, val) => {
+              setSelectedTab(val);
+            }}
+            centered
+          >
+            <Tab label="LP Amount → Dollar Value"></Tab>
+            <Tab label="Dollar Value → LP Amount" />
+          </Tabs>
+        </Paper>
+        {selectedTab == 0 && (
+          <Grid
+            container
+            direction="column"
+            spacing={3}
+            alignItems="center"
+            style={{
+              marginTop: "3rem",
+            }}
+          >
+            {inputDisabled && (
+              <Grid item>
                 <Box
-                  textAlign="left"
-                  fontWeight="fontWeightMedium"
+                  fontWeight="fontWeightBold"
                   fontFamily="fontFamily"
-                  color="#807474"
+                  color="#ff6961"
                 >
-                  Your Balance:{" "}
-                  <Link
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setLpAmount(userLPBalance);
-                    }}
-                  >
-                    {userLPBalance}
-                  </Link>
+                  Connect Wallet to Continue ⬈
                 </Box>
-                <Box
-                  textAlign="right"
-                  fontWeight="fontWeightMedium"
-                  fontFamily="fontFamily"
-                  color="#807474"
-                >
-                  <Link
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setLpAmount(lpAmount * 0.25);
-                    }}
-                  >
-                    25%
-                  </Link>
-                  {" | "}
-                  <Link
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setLpAmount(lpAmount * 0.5);
-                    }}
-                  >
-                    50%
-                  </Link>
-                  {" | "}
-                  <Link
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setLpAmount(lpAmount * 0.75);
-                    }}
-                  >
-                    75%
-                  </Link>
-                  {" | "}
-                  <Link
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setLpAmount(lpAmount);
-                    }}
-                  >
-                    100%
-                  </Link>
-                </Box>
-              </>
+              </Grid>
             )}
-            <TextField
-              id="lp-amount"
-              label="LP Token Amount"
-              variant="outlined"
-              style={{
-                minWidth: "450px",
-              }}
-              autoComplete="off"
-              disabled={inputDisabled}
-              value={lpAmount}
-              type="number"
-              onChange={(e) => setLpAmount(e.target.value)}
-            />
-          </Grid>
-          <Grid item>
-            <Button
-              variant="contained"
-              color="primary"
-              style={{
-                minHeight: "55px",
-                maxWidth: "200px",
-              }}
-              disabled={inputDisabled}
-              onClick={() => calculate()}
-            >
-              Calculate
-            </Button>
-          </Grid>
-
-          {token0Name && token1Name && (
             <Grid item>
+              <TextField
+                id="pair-address"
+                label="Pair Address"
+                variant="outlined"
+                style={{
+                  minWidth: "450px",
+                }}
+                autoComplete="off"
+                disabled={inputDisabled}
+                value={pairAddress}
+                onChange={(e) => setPairAddress(e.target.value)}
+              />
+            </Grid>
+            <Grid item>
+              {account && (
+                <>
+                  <Box
+                    textAlign="left"
+                    fontWeight="fontWeightMedium"
+                    fontFamily="fontFamily"
+                    color="#807474"
+                  >
+                    Your Balance:{" "}
+                    <Link
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setLpAmount(userLPBalance);
+                      }}
+                    >
+                      {userLPBalance}
+                    </Link>
+                  </Box>
+                  <Box
+                    textAlign="right"
+                    fontWeight="fontWeightMedium"
+                    fontFamily="fontFamily"
+                    color="#807474"
+                  >
+                    <Link
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setLpAmount(lpAmount * 0.25);
+                      }}
+                    >
+                      25%
+                    </Link>
+                    {" | "}
+                    <Link
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setLpAmount(lpAmount * 0.5);
+                      }}
+                    >
+                      50%
+                    </Link>
+                    {" | "}
+                    <Link
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setLpAmount(lpAmount * 0.75);
+                      }}
+                    >
+                      75%
+                    </Link>
+                    {" | "}
+                    <Link
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setLpAmount(lpAmount);
+                      }}
+                    >
+                      100%
+                    </Link>
+                  </Box>
+                </>
+              )}
+              <TextField
+                id="lp-amount"
+                label="LP Token Amount"
+                variant="outlined"
+                style={{
+                  minWidth: "450px",
+                }}
+                autoComplete="off"
+                disabled={inputDisabled}
+                value={lpAmount}
+                type="number"
+                onChange={(e) => setLpAmount(e.target.value)}
+              />
+            </Grid>
+            <Grid item>
+              <Button
+                variant="contained"
+                color="primary"
+                style={{
+                  minHeight: "55px",
+                  maxWidth: "200px",
+                }}
+                disabled={inputDisabled}
+                onClick={() => calculate()}
+              >
+                Calculate
+              </Button>
+            </Grid>
+
+            {token0Name && token1Name && (
+              <Grid item>
+                <Grid item>
+                  <Box
+                    textAlign="center"
+                    fontWeight="fontWeightBold"
+                    fontFamily="Monospace"
+                    fontSize={24}
+                    marginBottom={2}
+                  >
+                    LP Token Value: $
+                    {numberWithCommas(
+                      parseFloat(token0UsdVal + token1UsdVal).toFixed(2)
+                    )}
+                  </Box>
+                </Grid>
+                <Grid
+                  container
+                  direction="row"
+                  style={{
+                    minWidth: "450px",
+                  }}
+                >
+                  <Grid item>
+                    <Box
+                      textAlign="left"
+                      fontWeight="fontWeightBold"
+                      fontFamily="fontFamily"
+                    >
+                      Underlying {token0Name} Amount:
+                    </Box>
+                  </Grid>
+                  <Grid
+                    item
+                    style={{
+                      marginLeft: "auto",
+                    }}
+                  >
+                    <Box textAlign="right" fontFamily="fontFamily">
+                      {token0Share}
+                    </Box>
+                    <Box
+                      textAlign="right"
+                      fontWeight="fontWeightBold"
+                      fontFamily="fontFamily"
+                    >
+                      (${numberWithCommas(token0UsdVal)})
+                    </Box>
+                  </Grid>
+                </Grid>
+                <Grid
+                  container
+                  direction="row"
+                  style={{
+                    minWidth: "450px",
+                  }}
+                >
+                  <Grid item>
+                    <Box
+                      textAlign="left"
+                      fontWeight="fontWeightBold"
+                      fontFamily="fontFamily"
+                    >
+                      Underlying {token1Name} Amount:
+                    </Box>
+                  </Grid>
+                  <Grid
+                    item
+                    style={{
+                      marginLeft: "auto",
+                    }}
+                  >
+                    <Box textAlign="right" fontFamily="fontFamily">
+                      {token1Share}
+                    </Box>
+                    <Box
+                      textAlign="right"
+                      fontWeight="fontWeightBold"
+                      fontFamily="fontFamily"
+                    >
+                      (${numberWithCommas(token1UsdVal)})
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Grid>
+            )}
+          </Grid>
+        )}
+        {selectedTab == 1 && (
+          <Grid
+            container
+            direction="column"
+            spacing={3}
+            alignItems="center"
+            style={{
+              marginTop: "3rem",
+            }}
+          >
+            {inputDisabled && (
+              <Grid item>
+                <Box
+                  fontWeight="fontWeightBold"
+                  fontFamily="fontFamily"
+                  color="#ff6961"
+                >
+                  Connect Wallet to Continue ⬈
+                </Box>
+              </Grid>
+            )}
+            <Grid item>
+              <TextField
+                id="pair-address"
+                label="Pair Address"
+                variant="outlined"
+                style={{
+                  minWidth: "450px",
+                }}
+                autoComplete="off"
+                disabled={inputDisabled}
+                value={pairAddress}
+                onChange={(e) => setPairAddress(e.target.value)}
+              />
+            </Grid>
+            <Grid item>
+              <TextField
+                id="dollar-value"
+                label="Dollar Value"
+                variant="outlined"
+                style={{
+                  minWidth: "450px",
+                }}
+                autoComplete="off"
+                disabled={inputDisabled}
+                value={dollarValue}
+                type="number"
+                onChange={(e) => setDollarValue(e.target.value)}
+              />
+            </Grid>
+            <Grid item>
+              <Button
+                variant="contained"
+                color="primary"
+                style={{
+                  minHeight: "55px",
+                  maxWidth: "200px",
+                }}
+                disabled={inputDisabled}
+                onClick={() => calculateDollar()}
+              >
+                Calculate
+              </Button>
+            </Grid>
+            {lpAmountCalculated && (
               <Grid item>
                 <Box
                   textAlign="center"
@@ -489,83 +730,13 @@ function App() {
                   fontSize={24}
                   marginBottom={2}
                 >
-                  LP Token Value: $
-                  {numberWithCommas(
-                    parseFloat(token0UsdVal + token1UsdVal).toFixed(2)
-                  )}
+                  LP Tokens equivalent:{" "}
+                  {numberWithCommas(parseFloat(lpAmountCalculated).toFixed(2))}
                 </Box>
               </Grid>
-              <Grid
-                container
-                direction="row"
-                style={{
-                  minWidth: "450px",
-                }}
-              >
-                <Grid item>
-                  <Box
-                    textAlign="left"
-                    fontWeight="fontWeightBold"
-                    fontFamily="fontFamily"
-                  >
-                    Underlying {token0Name} Amount:
-                  </Box>
-                </Grid>
-                <Grid
-                  item
-                  style={{
-                    marginLeft: "auto",
-                  }}
-                >
-                  <Box textAlign="right" fontFamily="fontFamily">
-                    {token0Share}
-                  </Box>
-                  <Box
-                    textAlign="right"
-                    fontWeight="fontWeightBold"
-                    fontFamily="fontFamily"
-                  >
-                    (${numberWithCommas(token0UsdVal)})
-                  </Box>
-                </Grid>
-              </Grid>
-              <Grid
-                container
-                direction="row"
-                style={{
-                  minWidth: "450px",
-                }}
-              >
-                <Grid item>
-                  <Box
-                    textAlign="left"
-                    fontWeight="fontWeightBold"
-                    fontFamily="fontFamily"
-                  >
-                    Underlying {token1Name} Amount:
-                  </Box>
-                </Grid>
-                <Grid
-                  item
-                  style={{
-                    marginLeft: "auto",
-                  }}
-                >
-                  <Box textAlign="right" fontFamily="fontFamily">
-                    {token1Share}
-                  </Box>
-                  <Box
-                    textAlign="right"
-                    fontWeight="fontWeightBold"
-                    fontFamily="fontFamily"
-                  >
-                    (${numberWithCommas(token1UsdVal)})
-                  </Box>
-                </Grid>
-              </Grid>
-            </Grid>
-          )}
-        </Grid>
+            )}
+          </Grid>
+        )}
       </Paper>
     </Grid>
   );
