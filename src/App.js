@@ -16,7 +16,7 @@ import ConnectWallet from "./components/ConnectWallet";
 const uniPairABI = require("./abis/UniswapPair.json");
 const tokenABI = require("./abis/ERC20.json");
 // BN
-const BN = require("web3-utils").BN;
+const {BN, toWei} = require("web3-utils");
 
 const truncateWithDots = (
   str,
@@ -78,6 +78,7 @@ function App() {
   const [pairAddress, setPairAddress] = useState("");
   const [userLPBalance, setUserLPBalance] = useState("0");
   const [lpAmount, setLpAmount] = useState("");
+  const [lpAmountInBNWei, setLpAmountInBNWei] = useState("")
   const [token0Share, setToken0Share] = useState("");
   const [token1Share, setToken1Share] = useState("");
   const [token0Name, setToken0Name] = useState("");
@@ -121,7 +122,7 @@ function App() {
         // in case of 1inch pool having ETH as pool token
         const reserve0 = await web3.eth.getBalance(pairAddress);
         const userToken0Share = new BN(reserve0)
-          .mul(new BN(lpAmount).mul(new BN("10").pow(new BN("18"))))
+          .mul(lpAmountInBNWei)
           .div(new BN(lpTotalSupply));
         setToken0Share(await toDecimal(token0Address, userToken0Share, true));
         setToken0Name("ETH");
@@ -134,7 +135,7 @@ function App() {
           .balanceOf(pairAddress)
           .call();
         const userToken0Share = new BN(reserve0)
-          .mul(new BN(lpAmount).mul(new BN("10").pow(new BN("18"))))
+          .mul(lpAmountInBNWei)
           .div(new BN(lpTotalSupply));
         setToken0Share(await toDecimal(token0Instance, userToken0Share));
         setToken0Name(await token0Instance.methods.symbol().call());
@@ -148,7 +149,7 @@ function App() {
         .balanceOf(pairAddress)
         .call();
       const userToken1Share = new BN(reserve1)
-        .mul(new BN(lpAmount).mul(new BN("10").pow(new BN("18"))))
+        .mul(lpAmountInBNWei)
         .div(new BN(lpTotalSupply));
       setToken1Share(await toDecimal(token1Instance, userToken1Share));
       setToken1Name(await token1Instance.methods.symbol().call());
@@ -230,6 +231,12 @@ function App() {
 
     fetchUserLPBalance();
   }, [pairAddress]);
+
+  useEffect(() => {
+    if(lpAmount) {
+      setLpAmountInBNWei(new BN(toWei(lpAmount)))
+    }
+  }, [lpAmount])
 
   return (
     <Grid container direction="column">
