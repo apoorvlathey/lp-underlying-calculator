@@ -460,6 +460,7 @@ function App() {
               autoComplete="off"
               disabled={inputDisabled}
               value={lpAmount}
+              type="number"
               onChange={(e) => setLpAmount(e.target.value)}
             />
           </Grid>
