@@ -6,6 +6,7 @@ import {
   Box,
   TextField,
   Button,
+  Link,
   Typography,
 } from "@material-ui/core";
 import axios from "axios";
@@ -73,16 +74,17 @@ function App() {
   const [web3, setWeb3] = useState();
   const [account, setAccount] = useState("");
   const [inputDisabled, setInputDisabled] = useState(true);
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
   const [pairAddress, setPairAddress] = useState("");
+  const [userLPBalance, setUserLPBalance] = useState("0");
   const [lpAmount, setLpAmount] = useState("");
   const [token0Share, setToken0Share] = useState("");
   const [token1Share, setToken1Share] = useState("");
   const [token0Name, setToken0Name] = useState("");
   const [token1Name, setToken1Name] = useState("");
-  const [prices, setPrices] = useState([0, 0])
-  const [token0UsdVal, setToken0UsdVal] = useState(0)
-  const [token1UsdVal, setToken1UsdVal] = useState(0)
+  const [prices, setPrices] = useState([0, 0]);
+  const [token0UsdVal, setToken0UsdVal] = useState(0);
+  const [token1UsdVal, setToken1UsdVal] = useState(0);
 
   const ETHAddress = "0x0000000000000000000000000000000000000000";
   const WETHAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
@@ -103,7 +105,7 @@ function App() {
   ];
 
   const calculate = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const uniPair = new web3.eth.Contract(uniPairABI, pairAddress);
       const token0Address = await uniPair.methods.token0().call();
@@ -155,14 +157,16 @@ function App() {
       tokenAddressesForPrice.array.push(token1Address.toLowerCase());
 
       setPrices(await getPrice(tokenAddressesForPrice));
-      setLoading(false)
+      setLoading(false);
     } catch (error) {
       console.log(error);
     }
   };
 
   const toDecimal = async (tokenInstance, amount, isETH) => {
-    var decimals = isETH ? 18 : parseInt(await tokenInstance.methods.decimals().call());
+    var decimals = isETH
+      ? 18
+      : parseInt(await tokenInstance.methods.decimals().call());
     const divisor = new BN("10").pow(new BN(decimals));
     const beforeDec = new BN(amount).div(divisor).toString();
     var afterDec = new BN(amount).mod(divisor).toString();
@@ -198,11 +202,34 @@ function App() {
   }, [web3]);
 
   useEffect(() => {
-    if(prices[0] > 0 && prices[1] > 0 && token0Share && token1Share) {
-      setToken0UsdVal(parseFloat((prices[0] * token0Share).toFixed(2)))
-      setToken1UsdVal(parseFloat((prices[1] * token1Share).toFixed(2)))
+    if (prices[0] > 0 && prices[1] > 0 && token0Share && token1Share) {
+      setToken0UsdVal(parseFloat((prices[0] * token0Share).toFixed(2)));
+      setToken1UsdVal(parseFloat((prices[1] * token1Share).toFixed(2)));
     }
-  }, [prices, token0Share, token1Share])
+  }, [prices, token0Share, token1Share]);
+
+  useEffect(() => {
+    const fetchUserLPBalance = async () => {
+      if (pairAddress) {
+        setLoading(true);
+        try {
+          const lpTokenInstance = new web3.eth.Contract(tokenABI, pairAddress);
+          setUserLPBalance(
+            await toDecimal(
+              null,
+              await lpTokenInstance.methods.balanceOf(account).call(),
+              true // isETH==true bcoz lp tokens also have fixed 18 decimals
+            )
+          );
+          setLoading(false);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    };
+
+    fetchUserLPBalance();
+  }, [pairAddress]);
 
   return (
     <Grid container direction="column">
@@ -277,11 +304,11 @@ function App() {
           )}
         </Grid>
       </Grid>
-      <LinearProgress 
+      <LinearProgress
         style={{
           marginLeft: "9.5%",
           maxWidth: "81%",
-          ...(loading ? {display: "block"} : {display: "none"})
+          ...(loading ? { display: "block" } : { display: "none" }),
         }}
       />
       <Paper
@@ -332,6 +359,25 @@ function App() {
             </Grid>
           )}
           <Grid item>
+            {account && (
+              <Box
+                textAlign="right"
+                fontWeight="fontWeightMedium"
+                fontFamily="fontFamily"
+                color="#807474"
+              >
+                Your Balance:{" "}
+                <Link
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setLpAmount(userLPBalance);
+                  }}
+                >
+                  {userLPBalance}
+                </Link>
+              </Box>
+            )}
             <TextField
               id="pair-address"
               label="Pair Address"
@@ -354,6 +400,7 @@ function App() {
               }}
               autoComplete="off"
               disabled={inputDisabled}
+              value={lpAmount}
               onChange={(e) => setLpAmount(e.target.value)}
             />
           </Grid>
