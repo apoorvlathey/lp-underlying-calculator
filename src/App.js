@@ -16,7 +16,7 @@ import ConnectWallet from "./components/ConnectWallet";
 const uniPairABI = require("./abis/UniswapPair.json");
 const tokenABI = require("./abis/ERC20.json");
 // BN
-const {BN, toWei} = require("web3-utils");
+const { BN, toWei } = require("web3-utils");
 
 const truncateWithDots = (
   str,
@@ -78,7 +78,7 @@ function App() {
   const [pairAddress, setPairAddress] = useState("");
   const [userLPBalance, setUserLPBalance] = useState("0");
   const [lpAmount, setLpAmount] = useState("");
-  const [lpAmountInBNWei, setLpAmountInBNWei] = useState("")
+  const [lpAmountInBNWei, setLpAmountInBNWei] = useState("");
   const [token0Share, setToken0Share] = useState("");
   const [token1Share, setToken1Share] = useState("");
   const [token0Name, setToken0Name] = useState("");
@@ -233,10 +233,10 @@ function App() {
   }, [pairAddress]);
 
   useEffect(() => {
-    if(lpAmount) {
-      setLpAmountInBNWei(new BN(toWei(lpAmount)))
+    if (lpAmount) {
+      setLpAmountInBNWei(new BN(toWei(lpAmount)));
     }
-  }, [lpAmount])
+  }, [lpAmount]);
 
   return (
     <Grid container direction="column">
@@ -425,17 +425,89 @@ function App() {
               Calculate
             </Button>
           </Grid>
+
           {token0Name && token1Name && (
             <Grid item>
-              <Box fontWeight="fontWeightBold" fontFamily="fontFamily">
-                {token0Name} Amount: {token0Share} (${token0UsdVal})
-              </Box>
-              <Box fontWeight="fontWeightBold" fontFamily="fontFamily">
-                {token1Name} Amount: {token1Share} (${token1UsdVal})
-              </Box>
-              <Box fontWeight="fontWeightBold" fontFamily="fontFamily">
-                Total Worth: ${token0UsdVal + token1UsdVal}
-              </Box>
+              <Grid item>
+                <Box
+                  textAlign="center"
+                  fontWeight="fontWeightBold"
+                  fontFamily="Monospace"
+                  fontSize={24}
+                  marginBottom={2}
+                >
+                  LP Token Value: $
+                  {parseFloat(token0UsdVal + token1UsdVal).toFixed(2)}
+                </Box>
+              </Grid>
+              <Grid
+                container
+                direction="row"
+                style={{
+                  minWidth: "450px",
+                }}
+              >
+                <Grid item>
+                  <Box
+                    textAlign="left"
+                    fontWeight="fontWeightBold"
+                    fontFamily="fontFamily"
+                  >
+                    Underlying {token0Name} Amount:
+                  </Box>
+                </Grid>
+                <Grid
+                  item
+                  style={{
+                    marginLeft: "auto",
+                  }}
+                >
+                  <Box textAlign="right" fontFamily="fontFamily">
+                    {token0Share}
+                  </Box>
+                  <Box
+                    textAlign="right"
+                    fontWeight="fontWeightBold"
+                    fontFamily="fontFamily"
+                  >
+                    (${token0UsdVal})
+                  </Box>
+                </Grid>
+              </Grid>
+              <Grid
+                container
+                direction="row"
+                style={{
+                  minWidth: "450px",
+                }}
+              >
+                <Grid item>
+                  <Box
+                    textAlign="left"
+                    fontWeight="fontWeightBold"
+                    fontFamily="fontFamily"
+                  >
+                    Underlying {token1Name} Amount:
+                  </Box>
+                </Grid>
+                <Grid
+                  item
+                  style={{
+                    marginLeft: "auto",
+                  }}
+                >
+                  <Box textAlign="right" fontFamily="fontFamily">
+                    {token1Share}
+                  </Box>
+                  <Box
+                    textAlign="right"
+                    fontWeight="fontWeightBold"
+                    fontFamily="fontFamily"
+                  >
+                    (${token1UsdVal})
+                  </Box>
+                </Grid>
+              </Grid>
             </Grid>
           )}
         </Grid>
