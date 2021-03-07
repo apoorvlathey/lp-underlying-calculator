@@ -224,7 +224,7 @@ function App() {
           );
           setLoading(false);
         } catch (error) {
-          console.log(error);
+          // console.log(error);
         }
       }
     };
@@ -234,7 +234,7 @@ function App() {
 
   useEffect(() => {
     if (lpAmount) {
-      setLpAmountInBNWei(new BN(toWei(lpAmount)));
+      setLpAmountInBNWei(new BN(toWei(lpAmount.toString())));
     }
   }, [lpAmount]);
 
@@ -366,25 +366,6 @@ function App() {
             </Grid>
           )}
           <Grid item>
-            {account && (
-              <Box
-                textAlign="right"
-                fontWeight="fontWeightMedium"
-                fontFamily="fontFamily"
-                color="#807474"
-              >
-                Your Balance:{" "}
-                <Link
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setLpAmount(userLPBalance);
-                  }}
-                >
-                  {userLPBalance}
-                </Link>
-              </Box>
-            )}
             <TextField
               id="pair-address"
               label="Pair Address"
@@ -398,6 +379,73 @@ function App() {
             />
           </Grid>
           <Grid item>
+            {account && (
+              <>
+                <Box
+                  textAlign="left"
+                  fontWeight="fontWeightMedium"
+                  fontFamily="fontFamily"
+                  color="#807474"
+                >
+                  Your Balance:{" "}
+                  <Link
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLpAmount(userLPBalance);
+                    }}
+                  >
+                    {userLPBalance}
+                  </Link>
+                </Box>
+                <Box
+                  textAlign="right"
+                  fontWeight="fontWeightMedium"
+                  fontFamily="fontFamily"
+                  color="#807474"
+                >
+                  <Link
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLpAmount(userLPBalance * 0.25);
+                    }}
+                  >
+                    25%
+                  </Link>
+                  {" | "}
+                  <Link
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLpAmount(userLPBalance * 0.50);
+                    }}
+                  >
+                    50%
+                  </Link>
+                  {" | "}
+                  <Link
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLpAmount(userLPBalance * 0.75);
+                    }}
+                  >
+                    75%
+                  </Link>
+                  {" | "}
+                  <Link
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLpAmount(userLPBalance);
+                    }}
+                  >
+                    100%
+                  </Link>
+                </Box>
+              </>
+            )}
             <TextField
               id="lp-amount"
               label="LP Token Amount"
