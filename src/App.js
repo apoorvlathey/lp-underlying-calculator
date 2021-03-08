@@ -732,7 +732,7 @@ function App() {
                   marginBottom={2}
                 >
                   LP Tokens equivalent:{" "}
-                  {numberWithCommas(parseFloat(lpAmountCalculated).toFixed(2))}
+                  {numberWithCommas(parseFloat(lpAmountCalculated).toFixed(18))}
                 </Box>
               </Grid>
             )}
